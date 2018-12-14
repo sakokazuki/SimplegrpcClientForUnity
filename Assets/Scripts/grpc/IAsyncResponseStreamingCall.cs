@@ -5,5 +5,6 @@ using Grpc.Core;
 public interface IAsyncResponseStreamingCall<TResponse> : IAsyncCall {
 
 	IAsyncStreamReader<TResponse> ResponseStream{get;}
-	
+
 }
+

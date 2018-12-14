@@ -4,24 +4,7 @@ using UnityEngine;
 using Grpc.Core;
 using System;
 
-
 public static class GrpcObservable {
-
-	public static GrpcDuplexStreamingObservable<TRequest, TResponse> ObserveDuplexStreaming<TRequest, TResponse>(AsyncDuplexStreamingCall<TRequest, TResponse> call, bool disposableCall = true){
-		return GrpcDuplexStreamingObservable<TRequest, TResponse>.Observe(call, disposableCall);
-	}
-
-	public static GrpcServerStreamingObservable<TResponse> ObserveServerStreaming<TResponse>(AsyncServerStreamingCall<TResponse> call, bool disposableCall = true){
-		return GrpcServerStreamingObservable<TResponse>.Observe(call, disposableCall);
-	}
-
-	public static GrpcDuplexStreamingObservable<TRequest, TResponse> ToObservable<TRequest, TResponse>(this AsyncDuplexStreamingCall<TRequest, TResponse> call, bool disposableCall = true){
-		return ObserveDuplexStreaming(call, disposableCall);
-	}
-
-	public static GrpcServerStreamingObservable<TResponse> ToObservable<TResponse>(this AsyncServerStreamingCall<TResponse> call, bool disposableCall = true){
-		return ObserveServerStreaming(call, disposableCall);
-	}
 
 	public static IObserver<TResponse> CreateObserver<TResponse>(Action<TResponse> onResponse, Action<Exception> onError = null, Action onComplete = null)
 	{
@@ -59,3 +42,4 @@ public static class GrpcObservable {
 	}
 
 }
+

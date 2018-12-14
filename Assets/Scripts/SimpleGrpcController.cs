@@ -19,31 +19,42 @@ public class SimpleGrpcController : MonoBehaviour {
 		channel = new Channel(ip + ":" + port, ChannelCredentials.Insecure);
 		client = new StreamService.StreamServiceClient(channel);
 		
-		Sub();	
+		Sub();
+
+		
     }
 
-	GrpcDuplexStreamingObservable<Request, Payload> observable;
-	IDisposable subscriber;
-	IObserver<Payload> observer;
 
+
+	AsyncDuplexStreamingCall<Request, Payload> call_;
+	GrpcServerStreamingObservable<Payload> observable_;
+	IDisposable subscriber_;
+	IObserver<Payload> observer_;
+
+
+
+	
 	public async Task Sub(){
 		Task nowait = Task.Run(async ()=>{
-			Debug.Log("task run");
+			Debug.Log("new task run");
+			
+	
 			try{
-				using(observable = client.Events().ToObservable()){
-					Debug.Log("observable");
-					observer = GrpcObservable.CreateObserver<Payload>(
-						response => OnResponse(response)
-						, ex => OnError(ex)
-						, () => OnComplete()
+				using(call_ = client.Events()){
+					var asyncCall = call_.AsResponseStreamingCall();
+					observable_ = GrpcServerStreamingObservable<Payload>.Observe(asyncCall, false);
+
+					observer_ = GrpcObservable.CreateObserver<Payload>(
+						res => OnResponse(res),
+						ex => OnError(ex),
+						() => OnComplete()
 					);
-
-					subscriber = observable.Subscribe(observer);
-
+					subscriber_ = observable_.Subscribe(observer_);
 					OnInit();
 
-					await observable.ObserveAsync().ConfigureAwait(false);
-					Debug.Log("observable end");
+
+					await observable_.ObserveAsync().ConfigureAwait(false);
+					Debug.Log("new observable end");
 				}
 				
 			}catch(Exception ex){
@@ -52,19 +63,17 @@ public class SimpleGrpcController : MonoBehaviour {
 
 			}
 		});
-
-		
-
 	}
 	public async Task OnInit(){
-		Debug.Log("oninit");
+		Debug.Log("new oninit");
 		Request req = new Request{
 			ForceClose = false,
 			Events = {new Sako.SimpleGrpc.EventType{Type = "unity:test"}, new Sako.SimpleGrpc.EventType{Type = "unity:hoge"}},
 		};
-
-		await observable.WriteRequestAsync(req).ConfigureAwait(false);
+		
+		await call_.RequestStream.WriteAsync(req).ConfigureAwait(false);
 	}
+
 
 	public void OnResponse(Payload payload){
 		Debug.LogFormat("Got Data Type: {0}, Data {1}:", payload.EventType, payload.Data);
@@ -81,8 +90,13 @@ public class SimpleGrpcController : MonoBehaviour {
 
 	void OnApplicationQuit(){
 		Debug.Log("quit");
-		observable.CompleteRequestAsync().ConfigureAwait(false);
-		subscriber.Dispose();
+		if(call_ != null){
+			call_.RequestStream.CompleteAsync().ConfigureAwait(false);
+			call_.Dispose();
+		}
+		if(subscriber_ != null){
+			subscriber_.Dispose();
+		}
 	}
 
 	
