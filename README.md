@@ -4,7 +4,7 @@
 
 
 ## Install
-.unitypackage
+SimpleGrpc.unitypackage
 
 ## Usage
 - open "simplegrpc scene"
