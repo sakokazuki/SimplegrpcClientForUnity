@@ -1,7 +1,7 @@
 # Simple grpc unity client
 
 ## Description
-
+grpc client for simplegrpc server(https://github.com/sakokazuki/simplegrpc) that written by golang.
 
 ## Install
 SimpleGrpc.unitypackage
